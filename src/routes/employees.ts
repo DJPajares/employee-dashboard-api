@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const employees: Employee[] = await getEmployees();
+  const employees: Employee[] = await getEmployees(req, res);
   res.send(employees);
 });
 

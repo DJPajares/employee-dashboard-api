@@ -30,21 +30,40 @@ export const csvParser = async (
       // Convert file buffer to a string
       const file = req.file.buffer.toString();
       const rows = [];
+      // Set to keep track of unique id and login values
+      const idSet = new Set();
+      const loginSet = new Set();
 
-      // Parse the CSV file using fast-csv
       csv
-        .parseString(file, { headers: true })
+        .parseString(file, { headers: true, comment: '#', ignoreEmpty: true })
         .on('error', (error) => {
           console.error(error);
           return next(error);
         })
         .on('data', (row) => {
-          rows.push(row);
+          if (
+            row['id'] !== undefined &&
+            row['login'] !== undefined &&
+            row['name'] !== undefined &&
+            row['salary'] !== undefined &&
+            !idSet.has(row['id']) &&
+            !loginSet.has(row['login'])
+          ) {
+            // Add id and login values to sets to ensure uniqueness
+            idSet.add(row['id']);
+            loginSet.add(row['login']);
+            // Add row to rows array
+            rows.push(row);
+          }
         })
         .on('end', () => {
+          if (rows.length === 0) {
+            return next(new Error('No valid rows found in CSV file'));
+          }
+
           req.body = {
             ...req.body,
-            data: rows
+            csvData: rows
           };
 
           return next();

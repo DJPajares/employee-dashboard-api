@@ -2,19 +2,6 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-type queryParamsProps = {
-  limit?: string;
-  skip?: string;
-};
-
-const queryParams = ({ limit, skip }: queryParamsProps) => ({
-  // text: '',
-  // words: [],
-  take: limit ? parseInt(limit, 10) : 50,
-  skip: skip ? parseInt(skip, 10) : 0
-  // sort: { reviews: -1 }
-});
-
 export const createEmployee = async (data) => {
   return await prisma.employee.create({
     data
@@ -30,7 +17,31 @@ export const getEmployee = async (id) => {
 };
 
 export const getEmployees = async (req, res) => {
-  return await prisma.employee.findMany(queryParams(req.query));
+  const { minSalary, maxSalary, limit = 30, offset, sort } = req.query;
+
+  let orderBy = {};
+
+  if (sort) {
+    const sortOrder = sort.startsWith('-') ? 'desc' : 'asc';
+    const sortField = sort.replace(/^[+-]/, '');
+    if (['id', 'name', 'login', 'salary'].includes(sortField)) {
+      orderBy = {
+        [sortField]: sortOrder
+      };
+    }
+  }
+
+  return await prisma.employee.findMany({
+    where: {
+      salary: {
+        gte: minSalary ? parseInt(minSalary, 10) : undefined,
+        lte: maxSalary ? parseInt(maxSalary, 10) : undefined
+      }
+    },
+    orderBy,
+    skip: offset ? parseInt(offset, 10) : undefined,
+    take: limit ? parseInt(limit, 10) : 50
+  });
 };
 
 export const updateEmployee = async (id, data) => {

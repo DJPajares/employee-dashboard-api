@@ -2,8 +2,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const createEmployee = async (data) => {
-  return await prisma.employee.create({
+export const createEmployees = async (data) => {
+  return await prisma.employee.createMany({
     data
   });
 };

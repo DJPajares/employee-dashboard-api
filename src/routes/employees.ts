@@ -7,12 +7,13 @@ import {
   updateEmployee,
   deleteEmployee
 } from '../services/employees';
+import { csvParser } from '../middlewares/csvParser';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-  const employees: Employee[] = await getEmployees(req, res);
-  res.send(employees);
+router.post('/', csvParser, async (req, res) => {
+  const employee: Employee = await createEmployee(req.body);
+  res.send(employee);
 });
 
 router.get('/:id', async (req, res) => {
@@ -20,9 +21,9 @@ router.get('/:id', async (req, res) => {
   res.send(employee);
 });
 
-router.post('/', async (req, res) => {
-  const employee: Employee = await createEmployee(req.body);
-  res.send(employee);
+router.get('/', async (req, res) => {
+  const employees: Employee[] = await getEmployees(req, res);
+  res.send(employees);
 });
 
 router.put('/:id', async (req, res) => {

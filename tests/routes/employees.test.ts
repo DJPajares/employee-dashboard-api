@@ -27,4 +27,12 @@ describe('Employees API', () => {
       expect(res.body).toEqual(employees);
     });
   });
+
+  describe('GET /employees', () => {
+    it.only('should return 200 OK', async () => {
+      const res = await request(app).get('/api/employees');
+
+      expect(res.status).toEqual(200);
+    });
+  });
 });

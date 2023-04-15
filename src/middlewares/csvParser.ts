@@ -47,7 +47,8 @@ export const csvParser = async (
             row['name'] !== undefined &&
             row['salary'] !== undefined &&
             !idSet.has(row['id']) &&
-            !loginSet.has(row['login'])
+            !loginSet.has(row['login']) &&
+            row['salary'] >= 0
           ) {
             // Add id and login values to sets to ensure uniqueness
             idSet.add(row['id']);

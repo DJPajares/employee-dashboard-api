@@ -60,3 +60,13 @@ export const deleteEmployee = async (id) => {
     }
   });
 };
+
+export const deleteEmployees = async (data) => {
+  return await prisma.employee.deleteMany({
+    where: {
+      id: {
+        in: data
+      }
+    }
+  });
+};

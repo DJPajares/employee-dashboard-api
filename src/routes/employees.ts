@@ -5,7 +5,8 @@ import {
   getEmployee,
   getEmployees,
   updateEmployee,
-  deleteEmployee
+  deleteEmployee,
+  deleteEmployees
 } from '../services/employees';
 import { csvParser } from '../middlewares/csvParser';
 
@@ -43,6 +44,11 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const employee: Employee = await deleteEmployee(req.params.id);
   res.send(employee);
+});
+
+router.delete('/', async (req, res) => {
+  const employees = await deleteEmployees(req.body);
+  res.send(employees);
 });
 
 export default router;

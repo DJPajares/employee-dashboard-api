@@ -23,7 +23,7 @@ export const getEmployees = async (req, res) => {
 
   if (sort) {
     const sortOrder = sort.startsWith('-') ? 'desc' : 'asc';
-    const sortField = sort.replace(/^[+-]/, '');
+    const sortField = sort.replace(/^[+\-\s]*/g, '');
     if (['id', 'name', 'login', 'salary'].includes(sortField)) {
       orderBy = {
         [sortField]: sortOrder

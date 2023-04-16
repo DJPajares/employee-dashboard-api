@@ -13,43 +13,63 @@ import { csvParser } from '../middlewares/csvParser';
 
 const router = express.Router();
 
-// router.post('/', async (req, res) => {
-//   const employees: Employee[] = req.body;
+router.post('/', csvParser, async (req, res, next) => {
+  try {
+    const employees: Employee[] = req.body.csvData;
 
-//   const result = await createEmployees(employees);
-//   res.send(result);
-// });
-
-router.post('/', csvParser, async (req, res) => {
-  const employees: Employee[] = req.body.csvData;
-
-  const result = await createOrUpdateEmployees(employees);
-  res.send(result);
+    const result = await createOrUpdateEmployees(employees);
+    res.status(200).send({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get('/:id', async (req, res) => {
-  const employee: Employee = await getEmployee(req.params.id);
-  res.send(employee);
+router.get('/:id', async (req, res, next) => {
+  try {
+    const employee: Employee = await getEmployee(req.params.id);
+    res.send(employee);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.get('/', async (req, res) => {
-  const employees: Employee[] = await getEmployees(req, res);
-  res.send(employees);
+router.get('/', async (req, res, next) => {
+  try {
+    const employees: Employee[] = await getEmployees(req, res);
+    res.send(employees);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.put('/:id', async (req, res) => {
-  const employee: Employee = await updateEmployee(req.params.id, req.body);
-  res.send(employee);
+router.put('/:id', async (req, res, next) => {
+  try {
+    const employee: Employee = await updateEmployee(req.params.id, req.body);
+    res.send(employee);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.delete('/:id', async (req, res) => {
-  const employee: Employee = await deleteEmployee(req.params.id);
-  res.send(employee);
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const employee: Employee = await deleteEmployee(req.params.id);
+    res.send(employee);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.delete('/', async (req, res) => {
-  const employees = await deleteEmployees(req.body);
-  res.send(employees);
+router.delete('/', async (req, res, next) => {
+  try {
+    const employees = await deleteEmployees(req.body);
+    res.send(employees);
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

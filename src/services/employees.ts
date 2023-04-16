@@ -9,43 +9,47 @@ export const createEmployees = async (employees: Employee[]) => {
 };
 
 export const createOrUpdateEmployees = async (employees: Employee[]) => {
-  const newEmployees = [];
-  const existingEmployees = [];
+  try {
+    const newEmployees = [];
+    const existingEmployees = [];
 
-  for (const employee of employees) {
-    const { id, login, name, salary } = employee;
-    const existingEmployee = await prisma.employee.findUnique({
-      where: { id }
-    });
+    for (const employee of employees) {
+      const { id } = employee;
+      const existingEmployee = await prisma.employee.findUnique({
+        where: { id }
+      });
 
-    if (existingEmployee) {
-      existingEmployees.push(employee);
-    } else {
-      newEmployees.push(employee);
-    }
-  }
-
-  // Create new employees
-  await prisma.employee.createMany({
-    data: newEmployees
-  });
-
-  // Update existing employees
-  for (const employee of existingEmployees) {
-    const { id, login, name, salary } = employee;
-    const existingLoginEmployee = await prisma.employee.findUnique({
-      where: { login }
-    });
-
-    if (existingLoginEmployee && existingLoginEmployee.id !== id) {
-      throw new Error(`Login '${login}' already exists`);
+      if (existingEmployee) {
+        existingEmployees.push(employee);
+      } else {
+        newEmployees.push(employee);
+      }
     }
 
-    await prisma.employee.upsert({
-      where: { id },
-      update: { login, name, salary },
-      create: { id, login, name, salary }
+    // Create new employees
+    await prisma.employee.createMany({
+      data: newEmployees
     });
+
+    // Update existing employees
+    for (const employee of existingEmployees) {
+      const { id, login, name, salary } = employee;
+      const existingLoginEmployee = await prisma.employee.findUnique({
+        where: { login }
+      });
+
+      if (existingLoginEmployee && existingLoginEmployee.id !== id) {
+        throw new Error(`Login '${login}' already exists`);
+      }
+
+      await prisma.employee.upsert({
+        where: { id },
+        update: { login, name, salary },
+        create: { id, login, name, salary }
+      });
+    }
+  } catch {
+    throw new Error('Could not create or update employees');
   }
 };
 

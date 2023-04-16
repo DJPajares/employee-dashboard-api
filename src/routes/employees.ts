@@ -2,6 +2,7 @@ import express from 'express';
 import { Employee } from '@prisma/client';
 import {
   createEmployees,
+  createOrUpdateEmployees,
   getEmployee,
   getEmployees,
   updateEmployee,
@@ -22,7 +23,7 @@ const router = express.Router();
 router.post('/', csvParser, async (req, res) => {
   const employees: Employee[] = req.body.csvData;
 
-  const result = await createEmployees(employees);
+  const result = await createOrUpdateEmployees(employees);
   res.send(result);
 });
 

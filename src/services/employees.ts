@@ -1,11 +1,52 @@
-import { PrismaClient } from '@prisma/client';
+import { Employee, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const createEmployees = async (data) => {
+export const createEmployees = async (employees: Employee[]) => {
   return await prisma.employee.createMany({
-    data
+    data: employees
   });
+};
+
+export const createOrUpdateEmployees = async (employees: Employee[]) => {
+  const newEmployees = [];
+  const existingEmployees = [];
+
+  for (const employee of employees) {
+    const { id, login, name, salary } = employee;
+    const existingEmployee = await prisma.employee.findUnique({
+      where: { id }
+    });
+
+    if (existingEmployee) {
+      existingEmployees.push(employee);
+    } else {
+      newEmployees.push(employee);
+    }
+  }
+
+  // Create new employees
+  await prisma.employee.createMany({
+    data: newEmployees
+  });
+
+  // Update existing employees
+  for (const employee of existingEmployees) {
+    const { id, login, name, salary } = employee;
+    const existingLoginEmployee = await prisma.employee.findUnique({
+      where: { login }
+    });
+
+    if (existingLoginEmployee && existingLoginEmployee.id !== id) {
+      throw new Error(`Login '${login}' already exists`);
+    }
+
+    await prisma.employee.upsert({
+      where: { id },
+      update: { login, name, salary },
+      create: { id, login, name, salary }
+    });
+  }
 };
 
 export const getEmployee = async (id) => {

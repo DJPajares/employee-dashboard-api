@@ -1,4 +1,4 @@
-import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 export const errorHandler = (
   err: Error,
@@ -9,6 +9,7 @@ export const errorHandler = (
   console.error(err);
 
   res.status(400).send({
+    success: false,
     message: err.message
   });
 };

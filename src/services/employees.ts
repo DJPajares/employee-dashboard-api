@@ -10,45 +10,21 @@ export const createEmployees = async (employees: Employee[]) => {
 
 export const createOrUpdateEmployees = async (employees: Employee[]) => {
   try {
-    const newEmployees = [];
-    const existingEmployees = [];
+    const upserts = [];
 
     for (const employee of employees) {
-      const { id } = employee;
-      const existingEmployee = await prisma.employee.findUnique({
-        where: { id }
-      });
-
-      if (existingEmployee) {
-        existingEmployees.push(employee);
-      } else {
-        newEmployees.push(employee);
-      }
-    }
-
-    // Create new employees
-    await prisma.employee.createMany({
-      data: newEmployees
-    });
-
-    // Update existing employees
-    for (const employee of existingEmployees) {
       const { id, login, name, salary } = employee;
-      const existingLoginEmployee = await prisma.employee.findUnique({
-        where: { login }
-      });
-
-      if (existingLoginEmployee && existingLoginEmployee.id !== id) {
-        throw new Error(`Login '${login}' already exists`);
-      }
-
-      await prisma.employee.upsert({
+      const promise = prisma.employee.upsert({
         where: { id },
         update: { login, name, salary },
         create: { id, login, name, salary }
       });
+      upserts.push(promise);
     }
-  } catch {
+
+    await Promise.all(upserts);
+  } catch (error) {
+    console.error(error);
     throw new Error('Could not create or update employees');
   }
 };
@@ -64,29 +40,56 @@ export const getEmployee = async (id) => {
 export const getEmployees = async (req, res) => {
   const { minSalary, maxSalary, limit = 30, offset, sort } = req.query;
 
-  let orderBy = {};
+  // TODO: validate only if query parameters are present (middleware - validator)
 
-  if (sort) {
-    const sortOrder = sort.startsWith('-') ? 'desc' : 'asc';
-    const sortField = sort.replace(/^[+\-\s]*/g, '');
-    if (['id', 'name', 'login', 'salary'].includes(sortField)) {
-      orderBy = {
-        [sortField]: sortOrder
-      };
-    }
+  // TODO: validate query parameters (middleware - validator)
+  if (!minSalary || !maxSalary || !limit || !offset || !sort) {
+    throw new Error('Missing required query parameters');
   }
 
-  return await prisma.employee.findMany({
-    where: {
-      salary: {
-        gte: minSalary ? parseInt(minSalary, 10) : undefined,
-        lte: maxSalary ? parseInt(maxSalary, 10) : undefined
+  // TODO: validate parameter types (middleware - validator)
+
+  if (minSalary && maxSalary && parseFloat(minSalary) > parseFloat(maxSalary)) {
+    throw new Error('Min salary cannot be greater than max salary');
+  }
+
+  if (minSalary && parseFloat(minSalary) < 0) {
+    throw new Error('Min salary cannot be less than 0');
+  }
+
+  if (maxSalary && parseFloat(maxSalary) < 0) {
+    throw new Error('Max salary cannot be less than 0');
+  }
+
+  try {
+    let orderBy = {};
+
+    if (sort) {
+      const sortOrder = sort.startsWith('-') ? 'desc' : 'asc';
+      const sortField = sort.replace(/^[+\-\s]*/g, '');
+      if (['id', 'name', 'login', 'salary'].includes(sortField)) {
+        orderBy = {
+          [sortField]: sortOrder
+        };
+      } else {
+        throw new Error('Invalid sort field');
       }
-    },
-    orderBy,
-    skip: offset ? parseInt(offset, 10) : undefined,
-    take: limit ? parseInt(limit, 10) : 50
-  });
+    }
+
+    return await prisma.employee.findMany({
+      where: {
+        salary: {
+          gte: minSalary ? parseFloat(minSalary) : undefined,
+          lte: maxSalary ? parseFloat(maxSalary) : undefined
+        }
+      },
+      orderBy,
+      skip: offset ? parseInt(offset) : undefined,
+      take: limit ? parseInt(limit) : 50
+    });
+  } catch (error) {
+    throw new Error('Could not get employees');
+  }
 };
 
 export const updateEmployee = async (id, data) => {

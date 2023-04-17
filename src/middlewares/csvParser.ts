@@ -27,6 +27,11 @@ export const csvParser = async (
         return next(err);
       }
 
+      // Check if CSV file is missing
+      if (!req.file) {
+        return next(new Error('CSV file is missing'));
+      }
+
       // Convert file buffer to a string
       const file = req.file.buffer.toString();
       const rows = [];
@@ -70,8 +75,8 @@ export const csvParser = async (
           return next();
         });
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({ message: 'Error parsing CSV file' });
+  } catch (error) {
+    console.error(error);
+    return next(new Error('Error parsing CSV file'));
   }
 };

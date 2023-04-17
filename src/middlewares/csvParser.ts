@@ -60,6 +60,8 @@ export const csvParser = async (
             loginSet.add(row['login']);
             // Add row to rows array
             rows.push(row);
+          } else {
+            return next(new Error('Invalid row in CSV file'));
           }
         })
         .on('end', () => {

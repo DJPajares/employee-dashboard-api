@@ -11,7 +11,7 @@ _This is the back-end for the `employee dashboard` app_
     - [windows](https://www.postgresqltutorial.com/postgresql-getting-started/install-postgresql/)
     - [macos](https://www.postgresqltutorial.com/postgresql-getting-started/install-postgresql-macos/)
 - create a `.env` file in the root directory
-    - add a value as follows:
+    - add the `DATABASE_URL` value:
         - `DATABASE_URL="postgresql://<USER>:<PASSWORD>@<HOST>:<PORT>/<DATABASE>”`
         - sample: `DATABASE_URL="postgresql://postgres:pasword@localhost:5432/database?schema=public”`
 - initiate prisma

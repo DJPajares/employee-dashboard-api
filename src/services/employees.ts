@@ -11,19 +11,21 @@ export const createEmployees = async (employees: Employee[]) => {
 
 export const createOrUpdateEmployees = async (employees: Employee[]) => {
   try {
-    const upserts = [];
+    await prisma.$transaction(async (prisma) => {
+      const upserts = [];
 
-    for (const employee of employees) {
-      const { id, login, name, salary } = employee;
-      const promise = prisma.employee.upsert({
-        where: { id },
-        update: { login, name, salary },
-        create: { id, login, name, salary }
-      });
-      upserts.push(promise);
-    }
+      for (const employee of employees) {
+        const { id, login, name, salary } = employee;
+        const promise = prisma.employee.upsert({
+          where: { id },
+          update: { login, name, salary },
+          create: { id, login, name, salary }
+        });
+        upserts.push(promise);
+      }
 
-    await Promise.all(upserts);
+      await Promise.all(upserts);
+    });
   } catch (error) {
     console.error(error);
     throw new Error('Could not create or update employees');

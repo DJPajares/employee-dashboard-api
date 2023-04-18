@@ -1,13 +1,8 @@
 import { Employee, PrismaClient } from '@prisma/client';
 import { queryParamsSchema } from '../utilities/queryParamsValidator';
+import { Request } from 'express';
 
 const prisma = new PrismaClient();
-
-export const createEmployees = async (employees: Employee[]) => {
-  return await prisma.employee.createMany({
-    data: employees
-  });
-};
 
 export const createOrUpdateEmployees = async (employees: Employee[]) => {
   try {
@@ -32,15 +27,7 @@ export const createOrUpdateEmployees = async (employees: Employee[]) => {
   }
 };
 
-export const getEmployee = async (id) => {
-  return await prisma.employee.findUnique({
-    where: {
-      id
-    }
-  });
-};
-
-export const getEmployees = async (req, res) => {
+export const getEmployees = async (req: Request) => {
   try {
     const { minSalary, maxSalary, limit, offset, sort } =
       queryParamsSchema.parse(req.query);
@@ -57,39 +44,51 @@ export const getEmployees = async (req, res) => {
       take: limit
     });
   } catch (error) {
-    throw new Error('Invalid request');
+    throw new Error('Could not get employees');
   }
 };
 
 export const updateEmployee = async (id, data) => {
-  const { salary } = data;
+  try {
+    const { salary } = data;
 
-  if (salary < 0) {
-    throw new Error('Salary cannot be negative');
+    if (salary < 0) {
+      throw new Error('Salary cannot be negative');
+    }
+
+    return await prisma.employee.update({
+      where: {
+        id
+      },
+      data
+    });
+  } catch (error) {
+    throw new Error('Could not update employee');
   }
-
-  return await prisma.employee.update({
-    where: {
-      id
-    },
-    data
-  });
 };
 
 export const deleteEmployee = async (id) => {
-  return await prisma.employee.delete({
-    where: {
-      id
-    }
-  });
+  try {
+    return await prisma.employee.delete({
+      where: {
+        id
+      }
+    });
+  } catch (error) {
+    throw new Error('Could not delete an employee');
+  }
 };
 
 export const deleteEmployees = async (data) => {
-  return await prisma.employee.deleteMany({
-    where: {
-      id: {
-        in: data
+  try {
+    return await prisma.employee.deleteMany({
+      where: {
+        id: {
+          in: data
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    throw new Error('Could not delete employees');
+  }
 };

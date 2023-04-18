@@ -21,8 +21,8 @@ export const csvParser = async (
   next: NextFunction
 ) => {
   try {
-    // Use multer to upload a single CSV file with field name 'csv'
-    upload.single('csv')(req, res, (err: any) => {
+    // Use multer to upload a single CSV file with field name 'file'
+    upload.single('file')(req, res, (err: any) => {
       if (err) {
         return next(err);
       }

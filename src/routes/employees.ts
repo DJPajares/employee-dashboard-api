@@ -1,7 +1,6 @@
 import express from 'express';
 import { Employee } from '@prisma/client';
 import {
-  createEmployees,
   createOrUpdateEmployees,
   getEmployee,
   getEmployees,
@@ -13,16 +12,28 @@ import { csvParser } from '../middlewares/csvParser';
 
 const router = express.Router();
 
+// Lock endpoint to prevent multiple processes from running at the same time
+let lockEndpoint = false;
+
 router.post('/', csvParser, async (req, res, next) => {
   try {
     const employees: Employee[] = req.body.csvData;
 
+    if (lockEndpoint) {
+      throw new Error('Cannot process request at this time');
+    }
+
+    lockEndpoint = true;
+
     await createOrUpdateEmployees(employees);
+
+    lockEndpoint = false;
 
     res.status(200).send({
       success: true
     });
   } catch (error) {
+    lockEndpoint = false;
     next(error);
   }
 });

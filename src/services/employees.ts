@@ -1,4 +1,5 @@
 import { Employee, PrismaClient } from '@prisma/client';
+import { queryParamsSchema } from '../utilities/queryParamsValidator';
 
 const prisma = new PrismaClient();
 
@@ -38,61 +39,33 @@ export const getEmployee = async (id) => {
 };
 
 export const getEmployees = async (req, res) => {
-  const { minSalary, maxSalary, limit = 30, offset, sort } = req.query;
-
-  // TODO: validate only if query parameters are present (middleware - validator)
-
-  // TODO: validate query parameters (middleware - validator)
-  if (!minSalary || !maxSalary || !limit || !offset || !sort) {
-    throw new Error('Missing required query parameters');
-  }
-
-  // TODO: validate parameter types (middleware - validator)
-
-  if (minSalary && maxSalary && parseFloat(minSalary) > parseFloat(maxSalary)) {
-    throw new Error('Min salary cannot be greater than max salary');
-  }
-
-  if (minSalary && parseFloat(minSalary) < 0) {
-    throw new Error('Min salary cannot be less than 0');
-  }
-
-  if (maxSalary && parseFloat(maxSalary) < 0) {
-    throw new Error('Max salary cannot be less than 0');
-  }
-
   try {
-    let orderBy = {};
-
-    if (sort) {
-      const sortOrder = sort.startsWith('-') ? 'desc' : 'asc';
-      const sortField = sort.replace(/^[+\-\s]*/g, '');
-      if (['id', 'name', 'login', 'salary'].includes(sortField)) {
-        orderBy = {
-          [sortField]: sortOrder
-        };
-      } else {
-        throw new Error('Invalid sort field');
-      }
-    }
+    const { minSalary, maxSalary, limit, offset, sort } =
+      queryParamsSchema.parse(req.query);
 
     return await prisma.employee.findMany({
       where: {
         salary: {
-          gte: minSalary ? parseFloat(minSalary) : undefined,
-          lte: maxSalary ? parseFloat(maxSalary) : undefined
+          gte: minSalary,
+          lte: maxSalary
         }
       },
-      orderBy,
-      skip: offset ? parseInt(offset) : undefined,
-      take: limit ? parseInt(limit) : 50
+      orderBy: sort,
+      skip: offset,
+      take: limit
     });
   } catch (error) {
-    throw new Error('Could not get employees');
+    throw new Error('Invalid request');
   }
 };
 
 export const updateEmployee = async (id, data) => {
+  const { salary } = data;
+
+  if (salary < 0) {
+    throw new Error('Salary cannot be negative');
+  }
+
   return await prisma.employee.update({
     where: {
       id
